@@ -8,8 +8,11 @@
 #include "ay-3-8910.h"
 #include "gen_pwm.h"
 
-
+#ifdef DEBUG
+#define DEBUG 1
+#else
 #define DEBUG 0
+#endif
 
 // Descomprimir VGZ en memoria o leer VGM
 static uint8_t* vg = NULL;
@@ -230,14 +233,23 @@ int main( int argc, char* argv[] ) {
    }
 
    uint8_t gen_clk = 0;
+   FILE* f = NULL;
+   char* inputFileName;
 
-   // Opcion para generar CLK del ay-3-8910 con PWM
-   if( argc == 3 && !strcmp( argv[2], "-p" ) ) {
-      gen_clk = 1;
+   for (int i=1; i<argc; i++) {
+
+      // Opcion para generar CLK del ay-3-8910 con PWM
+      if( !strcmp( argv[i], "-p" ) ) {
+         gen_clk = 1;
+      }
+      else { 
+         // Cargar VGM
+	 printf( "Loading %s\n", argv[i] );
+         f = fopen( argv[i], "r" );
+	 inputFileName = argv[i];
+      }
    }
- 
-   // Cargar VGM
-   FILE* f = fopen( argv[1], "r" );
+
    if( !f ) {
       printf( "OMG - fichero no válido\n" );
       exit(-1);
@@ -256,7 +268,7 @@ int main( int argc, char* argv[] ) {
    vg = (uint8_t*)malloc( vg_size );
    long sz = fread( vg, 1, vg_size, f );
 
-   printf( "Leidos %lu bytes del fichero %s\n", sz, argv[1] );
+   printf( "Leidos %lu bytes del fichero %s\n", sz, inputFileName );
 
    // ¿VGZ?
    if( strncmp( id, "Vgm ", 4 ) ) {
